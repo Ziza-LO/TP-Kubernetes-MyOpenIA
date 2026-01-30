@@ -54,7 +54,7 @@ Nous validons l'état du nœud et créons l'espace d'isolation logique.
 </details>
 
 ![Cluster Prêt](./cluster_ready.png)
-![Namespace Créé](./namespace_created)
+![Namespace Créé](./namespace_created.png)
 
 ---
 
