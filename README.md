@@ -53,7 +53,7 @@ Nous validons l'état du nœud et créons l'espace d'isolation logique.
     ```
 </details>
 
-![Cluster Prêt](./cluster_prêt.png)
+![Cluster Prêt](./cluster_success.png)
 ![Namespace Créé](./espace_de_noms_créé.png)
 
 ---
