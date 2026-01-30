@@ -122,7 +122,7 @@ Simulation d'une panne critique en supprimant un Pod manuellement.
     ```
 </details>
 
-![Auto Guérison](./capture_auto-guérison.png)
+![Auto Guérison](./self_healing_capture.png)
 
 **Résultats de l'observation :**
 1.  **Le Pod est-il recréé ?** Oui, immédiatement (Age : 14s).
