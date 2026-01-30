@@ -53,8 +53,8 @@ Nous validons l'état du nœud et créons l'espace d'isolation logique.
     ```
 </details>
 
-![Cluster Prêt](./cluster_prêt.png)
-![Namespace Créé](.espace_de_noms_créé.png)
+![Cluster Prêt](./cluster_ready.png)
+![Namespace Créé](./namespace_created)
 
 ---
 
@@ -74,7 +74,7 @@ Application des manifestes pour les deux micro-services.
     ```
 </details>
 
-![Déploiements Actifs](./déploiements_actifs.png)
+![Déploiements Actifs](./deployments_active.png)
 
 > **Analyse de l'état :**
 > * **Pods :** Les 2 micro-services sont en état `Running`.
