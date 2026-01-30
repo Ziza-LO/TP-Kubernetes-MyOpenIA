@@ -4,21 +4,26 @@
 ![Kubernetes](https://img.shields.io/badge/kubernetes-v1.34.1-blue?style=for-the-badge&logo=kubernetes)
 ![Docker](https://img.shields.io/badge/Docker-Desktop-2496ED?style=for-the-badge&logo=docker)
 
-Ce projet documente la mise en place de l'infrastructure micro-services pour la plateforme **MyOpenIA** sur un cluster Kubernetes local. L'objectif est de déployer une architecture résiliente en utilisant une approche déclarative (manifestes YAML).
+Ce projet documente le déploiement initial de la plateforme **MyOpenIA** sur un cluster Kubernetes local. L'objectif est d'orchestrer des micro-services résilients en utilisant une approche déclarative, en isolant les ressources dans un Namespace dédié.
+
+---
 
 ## 🏗️ Architecture et Fichiers
 
-L'infrastructure est définie dans le dossier `infra/k8s/base/` et comprend :
-* **Namespace** : `myopenia` (Isolation)
-* **API Gateway** : Point d'entrée (Nginx)
-* **Agent Service** : Service backend (Nginx)
+L'infrastructure respecte une logique de déploiement par couches. Tous les manifestes se trouvent dans le répertoire `infra/k8s/base/` :
+
+| Fichier | Rôle |
+| :--- | :--- |
+| `namespace.yaml` | Isolation logique (création de l'espace `myopenia`). |
+| `gateway-api` | Point d'entrée de l'application (Deployment + Service). |
+| `agent-service` | Service backend secondaire (Deployment + Service). |
 
 ---
 
 ## 📋 Guide Technique Pas à Pas
 
-### 1️⃣ Initialisation de l'environnement (Cluster & Namespace)
-Vérification de l'état du nœud local et création de l'espace de travail isolé.
+### 1️⃣ Vérification et Création de l'environnement
+Nous commençons par valider l'état du nœud local et par créer l'espace d'isolation logique.
 
 <details>
 <summary>💻 Voir les commandes terminal</summary>
@@ -29,11 +34,16 @@ Vérification de l'état du nœud local et création de l'espace de travail isol
     ```
 * Créer le namespace :
     ```bash
-    kubectl apply -f infra/k8s/base/namespace.yaml
+    kubectl apply -f namespace.yaml
+    ```
+* Vérifier la création :
+    ```bash
+    kubectl get namespaces
     ```
 </details>
 
-![Cluster et Namespace](./espace_de_noms_créé.png)
+![Cluster Prêt](./cluster_prêt.png)
+![Namespace Créé](./espace_de_noms_créé.png)
 
 ---
 
@@ -45,23 +55,24 @@ Application des manifestes pour lancer les Deployments (Pods) et les Services (R
 
 * Appliquer toute la configuration :
     ```bash
-    kubectl apply -f infra/k8s/base/
+    kubectl apply -f .
     ```
-* Vérifier que tout est vert (Pods Running, Services créés) :
+* Vérifier que l'infrastructure est opérationnelle :
     ```bash
     kubectl get all -n myopenia
     ```
 </details>
 
 ![Déploiements Actifs](./déploiements_actifs.png)
+> *On observe ici les 2 Pods en statut `Running`, les 2 Services avec leurs IPs internes, et les Deployments prêts (1/1).*
 
 ---
 
 ### 3️⃣ Accès à l'API (Port-Forwarding)
-Les services étant internes (`ClusterIP`), nous créons un tunnel pour y accéder depuis la machine hôte.
+Les services étant exposés en interne (`ClusterIP`), nous créons un tunnel pour y accéder depuis la machine hôte.
 
-> **🛠️ Challenge Technique Résolu :**
-> L'image Nginx écoute par défaut sur le port **80**. Nous avons configuré le tunnel pour mapper le port local **8000** vers le port **80** du conteneur.
+> **🛠️ Difficulté rencontrée & Solution :**
+> L'image `nginx:latest` écoute nativement sur le port **80**. Bien que nous ayons initialement pensé au port 8000, nous avons dû adapter la configuration pour mapper le port local **8000** vers le port **80** du conteneur afin que le trafic passe correctement.
 
 <details>
 <summary>💻 Voir les commandes terminal</summary>
@@ -76,13 +87,12 @@ Les services étant internes (`ClusterIP`), nous créons un tunnel pour y accéd
     ```
 </details>
 
-![Port Forwarding](./port_forward.png)
 ![Succès Curl](./curl_success.png)
 
 ---
 
 ### 4️⃣ Test de Résilience (Auto-Guérison)
-Démonstration de la capacité de Kubernetes à réparer le système automatiquement.
+Démonstration de la capacité de Kubernetes à réparer le système automatiquement (Self-healing).
 
 <details>
 <summary>💻 Voir les commandes terminal</summary>
@@ -99,20 +109,29 @@ Démonstration de la capacité de Kubernetes à réparer le système automatique
 
 ![Auto Guérison](./capture_auto-guérison.png)
 
-**Résultat :** Le Deployment a détecté la perte du Pod et en a redémarré un nouveau en moins de 15 secondes (Age: 14s).
+**Analyse du résultat :**
+Le **Deployment** a détecté que le nombre de répliques actives (0) ne correspondait plus à l'état désiré (1). Il a ordonné la création d'un nouveau Pod immédiatement (Age : 14s sur la capture).
 
 ---
 
-## 🧠 Concepts Clés
-* **Pod** : Unité atomique contenant le conteneur applicatif.
-* **Deployment** : Assure le maintien de l'état désiré (Self-healing).
-* **Service** : Fournit une IP stable pour accéder aux Pods éphémères.
+## 🧠 Synthèse Technique
+
+### Rôle des ressources
+* **Namespace** : Utiliser pour éviter les conflits de nommage avec d'autres projets.
+* **Deployment** : "Cerveau" qui gère le cycle de vie des applications et assure la haute disponibilité.
+* **Service** : Interface réseau stable (IP fixe) permettant d'accéder aux Pods même s'ils sont redémarrés.
+
+### Ce que Kubernetes gère automatiquement
+1.  **L'auto-guérison :** Remplacement automatique des conteneurs défaillants.
+2.  **L'état désiré :** Surveillance continue pour aligner la réalité sur les fichiers YAML.
+
+---
 
 ## 🚀 Prochaines Étapes
 La suite du projet (Séance 2) intégrera :
 * 📦 **ConfigMaps** pour externaliser la configuration.
-* 🔐 **Secrets** pour les données sensibles.
-* 💾 **Volumes** pour la persistance des données.
+* 🔐 **Secrets** pour gérer les données sensibles.
+* 💾 **Volumes** pour rendre les données persistantes.
 
 ---
 *Projet réalisé par Abdoul Aziz LO - Module Kubernetes*
